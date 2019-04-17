@@ -21,12 +21,12 @@ class TemporaryDirectory(object):
         shutil.rmtree(self.name)
 
 
-def get_consensus(pham_list):
+def get_consensus_from_long(pham_list):
 	f = open('/tmp/tempquery.txt', 'w')
 	for gene in pham_list:
 		f.write(">" + gene[0] + '\n')
 		f.write(gene[1].replace('-','M') + '\n')
-		f.close()
+	f.close()
 
 	#print "Aligning " + str(key)
 	bashCom = "kalign -i /tmp/tempquery.txt -o /tmp/tempout.txt -q"
@@ -236,7 +236,7 @@ for tuple in tuples:
 		phams[tuple[0]].append([tuple[1], tuple[2]])
 
 #Initialize the final consensus file
-c = open('/tmp/consensi.txt','w')
+c1 = open('/tmp/consensi_1.txt','w')
 
 #Do alignments, conversion, and consensus extraction for all phams
 print "Doing Phamily kalignments"
@@ -249,18 +249,18 @@ for key in phams:
 	count += 1
 	if (len(phams[key]) < 2):
 		#print "Singleton... " + str(key)
-		c.write(">" + str(key) + '\n')
-		c.write(phams[key][0][1] + '\n')
+		c1.write(">" + str(key) + '\n')
+		c1.write(phams[key][0][1] + '\n')
 	else:
 		long_phams[key] = phams[key]
 
-for key, long_pham in long_phams.items():
-	consensus_lines = get_consensus(long_pham)
-	c.write(">" + str(key) + '\n')
-	c.write(consensus_lines[2] + '\n')
+c1.close()
+
+consensus_lines = get_consensus_from_long(long_phams)
 
 
-c.close()
+
+
 
 #do the second kClust iteration
 bashCom = ("kClust -i /tmp/consensi.txt -d /tmp/kClust -s 0 -c .5")
