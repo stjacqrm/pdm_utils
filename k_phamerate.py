@@ -22,6 +22,33 @@ class TemporaryDirectory(object):
 
 
 def get_consensus_from_long(pham_list):
+	"""
+			f = open('/tmp/tempquery.txt','w')
+		for gene in phams[key]:
+			f.write(">" + gene[0] + '\n')
+			f.write(gene[1].replace('-','M') + '\n')
+		f.close()
+
+		#print "Aligning " + str(key)
+		bashCom = "kalign -i /tmp/tempquery.txt -o /tmp/tempout.txt -q"
+		os.system(bashCom)
+
+		#print "Converting " + str(key)
+		bashCom = "hhmake -v 0 -i /tmp/tempout.txt"
+		os.system(bashCom)
+
+		#print "Building Consensus " + str(key)
+		bashCom = "hhconsensus -v 0 -i /tmp/tempout.hhm -o /tmp/tempcons.txt"
+		os.system(bashCom)
+		d = open('/tmp/tempcons.txt', 'r')
+		lines = d.read().splitlines()
+		d.close()
+		c.write(">" + str(key) + '\n')
+		c.write(lines[2] + '\n')
+
+	:param pham_list: dict with keys as pham names, values are lists of [geneid, aa seq] strings
+	:return: all things written to c.write above
+	"""
 	f = open('/tmp/tempquery.txt', 'w')
 	for gene in pham_list:
 		f.write(">" + gene[0] + '\n')
@@ -259,7 +286,40 @@ c1.close()
 consensus_lines = get_consensus_from_long(long_phams)
 
 
+"""
+	if count % 100 == 0:
+		print "Processing pham " + `count` + " out of " + `length`
+	count += 1
+	if (len(phams[key]) < 2):
+		#print "Singleton... " + str(key)
+		c.write(">" + str(key) + '\n')
+		c.write(phams[key][0][1] + '\n')
+	else:
+		f = open('/tmp/tempquery.txt','w')
+		for gene in phams[key]:
+			f.write(">" + gene[0] + '\n')
+			f.write(gene[1].replace('-','M') + '\n')
+		f.close()
 
+		#print "Aligning " + str(key)
+		bashCom = "kalign -i /tmp/tempquery.txt -o /tmp/tempout.txt -q"
+		os.system(bashCom)
+
+		#print "Converting " + str(key)
+		bashCom = "hhmake -v 0 -i /tmp/tempout.txt"
+		os.system(bashCom)
+
+		#print "Building Consensus " + str(key)
+		bashCom = "hhconsensus -v 0 -i /tmp/tempout.hhm -o /tmp/tempcons.txt"
+		os.system(bashCom)
+		d = open('/tmp/tempcons.txt', 'r')
+		lines = d.read().splitlines()
+		d.close()
+		c.write(">" + str(key) + '\n')
+		c.write(lines[2] + '\n')
+
+c.close()
+"""
 
 
 #do the second kClust iteration
