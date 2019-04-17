@@ -6,6 +6,44 @@
 
 import MySQLdb as mdb
 import sys, os, random, colorsys, datetime, getpass
+import shutil
+import tempfile
+
+
+class TemporaryDirectory(object):
+    # see https://stackoverflow.com/questions/6884991/how-to-delete-dir-created-by-python-tempfile-mkdtemp
+    """Context manager for tempfile.mkdtemp() so it's usable with "with" statement."""
+    def __enter__(self):
+        self.name = tempfile.mkdtemp()
+        return self.name
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        shutil.rmtree(self.name)
+
+
+def get_consensus(pham_list):
+	f = open('/tmp/tempquery.txt', 'w')
+	for gene in pham_list:
+		f.write(">" + gene[0] + '\n')
+		f.write(gene[1].replace('-','M') + '\n')
+		f.close()
+
+	#print "Aligning " + str(key)
+	bashCom = "kalign -i /tmp/tempquery.txt -o /tmp/tempout.txt -q"
+	os.system(bashCom)
+
+	#print "Converting " + str(key)
+	bashCom = "hhmake -v 0 -i /tmp/tempout.txt"
+	os.system(bashCom)
+
+	#print "Building Consensus " + str(key)
+	bashCom = "hhconsensus -v 0 -i /tmp/tempout.hhm -o /tmp/tempcons.txt"
+	os.system(bashCom)
+	d = open('/tmp/tempcons.txt', 'r')
+	lines = d.read().splitlines()
+	d.close()
+	return lines
+
 
 #Get the command line parameters
 try:
@@ -204,6 +242,7 @@ c = open('/tmp/consensi.txt','w')
 print "Doing Phamily kalignments"
 count = 1
 length = len(phams)
+long_phams = {}
 for key in phams:
 	if count % 100 == 0:
 		print "Processing pham " + `count` + " out of " + `length`
@@ -213,28 +252,13 @@ for key in phams:
 		c.write(">" + str(key) + '\n')
 		c.write(phams[key][0][1] + '\n')
 	else:
-		f = open('/tmp/tempquery.txt','w')
-		for gene in phams[key]:
-			f.write(">" + gene[0] + '\n')
-			f.write(gene[1].replace('-','M') + '\n')
-		f.close()
+		long_phams[key] = phams[key]
 
-		#print "Aligning " + str(key)
-		bashCom = "kalign -i /tmp/tempquery.txt -o /tmp/tempout.txt -q"
-		os.system(bashCom)
+for key, long_pham in long_phams.items():
+	consensus_lines = get_consensus(long_pham)
+	c.write(">" + str(key) + '\n')
+	c.write(consensus_lines[2] + '\n')
 
-		#print "Converting " + str(key)
-		bashCom = "hhmake -v 0 -i /tmp/tempout.txt"
-		os.system(bashCom)
-
-		#print "Building Consensus " + str(key)
-		bashCom = "hhconsensus -v 0 -i /tmp/tempout.hhm -o /tmp/tempcons.txt"
-		os.system(bashCom)
-		d = open('/tmp/tempcons.txt', 'r')
-		lines = d.read().splitlines()
-		d.close()
-		c.write(">" + str(key) + '\n')
-		c.write(lines[2] + '\n')
 
 c.close()
 
