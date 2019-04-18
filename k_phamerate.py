@@ -25,6 +25,10 @@ def get_consensus_from_long(pham_list):
 	"""
 	:param pham_list: dict with keys as pham names, values are lists of [geneid, aa seq] strings
 	:return: all things written to c.write above
+
+	Here is how to string together the calls into a single bash command for later parallelization:
+    kalign -i <infile> | hhmake -v 0 -i /dev/stdin -o /dev/stdout | hhconsensus -v 0 -i /dev/stdin -o <outfile>
+
 	"""
 	all_lines = []
 	for pham_no, genes in pham_list.items():
