@@ -22,34 +22,11 @@ class TemporaryDirectory(object):
 
 
 def get_consensus_from_long(pham_list):
-	all_lines = []
 	"""
-			f = open('/tmp/tempquery.txt','w')
-		for gene in phams[key]:
-			f.write(">" + gene[0] + '\n')
-			f.write(gene[1].replace('-','M') + '\n')
-		f.close()
-
-		#print "Aligning " + str(key)
-		bashCom = "kalign -i /tmp/tempquery.txt -o /tmp/tempout.txt -q"
-		os.system(bashCom)
-
-		#print "Converting " + str(key)
-		bashCom = "hhmake -v 0 -i /tmp/tempout.txt"
-		os.system(bashCom)
-
-		#print "Building Consensus " + str(key)
-		bashCom = "hhconsensus -v 0 -i /tmp/tempout.hhm -o /tmp/tempcons.txt"
-		os.system(bashCom)
-		d = open('/tmp/tempcons.txt', 'r')
-		lines = d.read().splitlines()
-		d.close()
-		c.write(">" + str(key) + '\n')
-		c.write(lines[2] + '\n')
-
 	:param pham_list: dict with keys as pham names, values are lists of [geneid, aa seq] strings
 	:return: all things written to c.write above
 	"""
+	all_lines = []
 	for pham_no, genes in pham_list.items():
 		f = open('/tmp/tempquery_{}.txt'.format(pham_no), 'w')
 		for gene in genes:
@@ -267,7 +244,7 @@ for tuple in tuples:
 		phams[tuple[0]].append([tuple[1], tuple[2]])
 
 #Initialize the final consensus file
-c1 = open('/tmp/consensi_1.txt','w')
+c1 = open('/tmp/consensi.txt','w')
 
 #Do alignments, conversion, and consensus extraction for all phams
 print "Doing Phamily kalignments"
@@ -289,8 +266,9 @@ c1.close()
 
 consensus_lines = get_consensus_from_long(long_phams)
 
-with open('/tmp/consensi_1.txt','a') as c1:
-	c1.write(consensus_lines)
+with open('/tmp/consensi.txt','a') as c1:
+	for line in consensus_lines:
+		c1.write(line)
 
 
 #do the second kClust iteration
