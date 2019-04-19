@@ -220,9 +220,9 @@ for key in phams:
 		f.close()
 
 		#print "Aligning " + str(key)
-		bashCom = "kalign -i /tmp/tempquery.txt -o /tmp/tempout.txt -q"
+		bashCom = "kalign -i /tmp/tempquery.txt -o /dev/stdout -q | hhmake -v 0 -i /dev/stdin -o /dev/stdout | hhconsensus -v 0 -i /dev/stdin -o /tmp/tempcons.txt"
 		os.system(bashCom)
-
+		"""
 		#print "Converting " + str(key)
 		bashCom = "hhmake -v 0 -i /tmp/tempout.txt"
 		os.system(bashCom)
@@ -230,6 +230,7 @@ for key in phams:
 		#print "Building Consensus " + str(key)
 		bashCom = "hhconsensus -v 0 -i /tmp/tempout.hhm -o /tmp/tempcons.txt"
 		os.system(bashCom)
+		"""
 		d = open('/tmp/tempcons.txt', 'r')
 		lines = d.read().splitlines()
 		d.close()
