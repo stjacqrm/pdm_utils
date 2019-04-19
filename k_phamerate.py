@@ -39,16 +39,18 @@ def get_consensus_from_long(pham_list):
 		f.close()
 
 		#print "Aligning " + str(key)
-		bashCom = 'kalign -i /tmp/tempquery_{}.txt -o /tmp/tempout.txt -q'.format(pham_no)
+		bashCom = 'kalign -i /tmp/tempquery_{}.txt | hhmake -v 0 -i /dev/stdin -o /dev/stdout | hhconsensus -v 0 -i /dev/stdin -o /tmp/tempcons.txt'.format(pham_no)
 		os.system(bashCom)
 
-		#print "Converting " + str(key)
+		"""
+		print "Converting " + str(key)
 		bashCom = "hhmake -v 0 -i /tmp/tempout.txt"
 		os.system(bashCom)
 
 		#print "Building Consensus " + str(key)
 		bashCom = "hhconsensus -v 0 -i /tmp/tempout.hhm -o /tmp/tempcons.txt"
 		os.system(bashCom)
+		"""
 		d = open('/tmp/tempcons.txt', 'r')
 		lines = d.read().splitlines()
 		d.close()
