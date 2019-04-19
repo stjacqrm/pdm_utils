@@ -34,13 +34,21 @@ def get_consensus_from_long(pham_list):
 	with open('/tmp/phams.txt', 'w') as f:
 		f.write('\n'.join([str(x) for x in pham_list.keys()]))
 
+	with open('/tmp/commands.txt', 'w') as cf:
+		for pham_no in pham_list.keys():
+			command = 'kalign -q -i /tmp/tempquery_{0}.txt -o /dev/stdout | hhmake -v 0 -i /dev/stdin -o /dev/stdout | hhconsensus -v 0 -i /dev/stdin -o /tmp/tempcons_{0}.txt'.format(pham_no)
+			cf.write(command + "\n")
+
 	for pham_no, genes in pham_list.items():
 		f = open('/tmp/tempquery_{}.txt'.format(pham_no), 'w')
 		for gene in genes:
 			f.write(">" + gene[0] + '\n')
 			f.write(gene[1].replace('-','M') + '\n')
 		f.close()
+		os.system('cat /tmp/commands.txt | parallel -j 4')
 
+
+		"""
 		#print "Aligning " + str(key)
 		bashCom = 'kalign -q -i /tmp/tempquery_{}.txt -o /dev/stdout | '.format(pham_no)
 		bashCom += 'hhmake -v 0 -i /dev/stdin -o /dev/stdout | '
@@ -48,7 +56,7 @@ def get_consensus_from_long(pham_list):
 		os.system(bashCom)
 
 
-		"""
+		
 		print "Converting " + str(key)
 		bashCom = "hhmake -v 0 -i /tmp/tempout.txt"
 		os.system(bashCom)
