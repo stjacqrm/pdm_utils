@@ -31,6 +31,9 @@ def get_consensus_from_long(pham_list):
 
 	"""
 	all_lines = []
+	with open('/tmp/phams.txt', 'w') as f:
+		f.write('\n'.join([str(x) for x in pham_list.keys()]))
+
 	for pham_no, genes in pham_list.items():
 		f = open('/tmp/tempquery_{}.txt'.format(pham_no), 'w')
 		for gene in genes:
@@ -39,8 +42,11 @@ def get_consensus_from_long(pham_list):
 		f.close()
 
 		#print "Aligning " + str(key)
-		bashCom = 'kalign -i /tmp/tempquery_{}.txt | hhmake -v 0 -i /dev/stdin -o /dev/stdout | hhconsensus -v 0 -i /dev/stdin -o /tmp/tempcons.txt'.format(pham_no)
+		bashCom = 'kalign -q -i /tmp/tempquery_{}.txt -o /dev/stdout | '.format(pham_no)
+		bashCom += 'hhmake -v 0 -i /dev/stdin -o /dev/stdout | '
+		bashCom += 'hhconsensus -v 0 -i /dev/stdin -o /tmp/tempcons_{}.txt'.format(pham_no)
 		os.system(bashCom)
+
 
 		"""
 		print "Converting " + str(key)
@@ -51,7 +57,9 @@ def get_consensus_from_long(pham_list):
 		bashCom = "hhconsensus -v 0 -i /tmp/tempout.hhm -o /tmp/tempcons.txt"
 		os.system(bashCom)
 		"""
-		d = open('/tmp/tempcons.txt', 'r')
+
+	for pham_no in pham_list.keys():
+		d = open('/tmp/tempcons_{}.txt'.format(pham_no), 'r')
 		lines = d.read().splitlines()
 		d.close()
 		all_lines.append(">" + str(pham_no) + '\n')
