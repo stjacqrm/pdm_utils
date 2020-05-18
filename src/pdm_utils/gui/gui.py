@@ -18,7 +18,6 @@ def main():
     if not login_window.alchemist.connected_database:
         sys.exit(1)
 
-    test_alchemist_1(login_window.alchemist)
         
 
 
