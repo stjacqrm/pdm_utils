@@ -31,6 +31,7 @@ class Connector(tkinter.Frame):
         self.connect_button = Button(self.master, text="Connect", 
                                           command=self.connect,
                                           font=gui_basic.BUTTON_FONT_1)
+        self.connect_button.bind("<Return>", self.connect_invoke)
         self.connect_button.place(in_=self.database_entry, y=30, relx=0.5,
                                                       anchor=tkinter.N)
 
@@ -61,6 +62,9 @@ class Connector(tkinter.Frame):
                                          "Please try again.")
         else:
             self.quit()
+
+    def connect_invoke(self, var=None, index=None, mode=None):
+        self.connect_button.invoke()
 
 def create_window(connector_window):
     connector_window.geometry("300x250")

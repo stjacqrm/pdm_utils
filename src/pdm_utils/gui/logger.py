@@ -52,6 +52,7 @@ class Logger(tkinter.Frame):
         self.login_button = Button(self.master, text="Login", 
                                                 command=self.login,
                                                 font=gui_basic.BUTTON_FONT_1)
+        self.login_button.bind("<Return>", self.login_invoke)
         self.login_button.place(in_=self.pass_entry, y=30, relx=0.5,
                                             anchor=tkinter.N)
 
@@ -78,6 +79,9 @@ class Logger(tkinter.Frame):
         connector_window.withdraw()
 
         self.master.quit()
+
+    def login_invoke(self, var=None, index=None, mode=None):
+        self.login_button.invoke()
 
 def create_window(logger_window):
     logger_window.geometry("400x250")
