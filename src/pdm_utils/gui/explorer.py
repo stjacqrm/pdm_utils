@@ -10,12 +10,13 @@ from tkinter import Menubutton
 from tkinter.ttk import Combobox
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
 from pdm_utils.gui import connector
-from pdm_utils.gui import filterer
 from pdm_utils.gui import gui_basic
 from pdm_utils.gui import logger
+from pdm_utils.pipelines.export_db import decode_results
 
 FILTERABLE_PIPELINES = ["export", "freeze", "resubmit", "resubmit"]
 
@@ -29,6 +30,7 @@ class Explorer(tkinter.Frame):
         self.master = master 
 
         self.alchemist = None
+        self.filter = None
         self.tables = []
 
         self.login()
@@ -191,6 +193,7 @@ class Explorer(tkinter.Frame):
         logger_window.withdraw()
 
         self.alchemist = logger_obj.alchemist
+        self.db_filter = Filter(alchemist=self.alchemist)
         self.update_tables()
 
     def connect(self):
@@ -200,6 +203,8 @@ class Explorer(tkinter.Frame):
         connector_obj.mainloop()
         
         connector_window.withdraw()
+
+        self.db_filter.link(alchemist=self.alchemist)
 
     def update_tables(self):
         for table in self.alchemist.metadata.tables:
@@ -331,20 +336,84 @@ class Explorer(tkinter.Frame):
             self.filter_conj_entry.configure(state="disabled")
 
     def query(self):
-        self.draw_display()
+        try:
+            columns = self.process_columns()
+        except:
+            self.raise_column_error()
+            return
 
-    def draw_display(self):
-        self.entries = []
-        for x in range(5):
+        try:
+            self.db_filter.add(self.where_entry.get())
+        except:
+            self.raise_filter_error()
+            return
+        
+        query_type = self.query_type_var.get()  
+        conditionals = self.db_filter.build_where_clauses()
+        self.db_filter.reset()
+        if query_type == BASE_QUERY_TYPES[0]:
+            query = querying.build_select(self.alchemist.graph, columns,
+                                                where=conditionals)
+        elif query_type == BASE_QUERY_TYPES[1]:
+            query = querying.build_count(self.alchemist.graph, columns,
+                                                where=conditionals)
+        elif query_type == BASE_QUERY_TYPES[2]:
+            query = querying.build_distinct(self.alchemist.graph, columns, 
+                                                where=conditionals)
+
+        data = querying.execute(self.alchemist.engine, query)
+        decode_results(data, columns)
+        
+        header = []
+        if data:
+            header = list(data[0].keys())
+
+        self.draw_display(data, header)
+
+    def process_columns(self):
+        columns_string = self.columns_entry.get()
+
+        split_columns_string = columns_string.split(",")
+
+        columns = []
+        for string in split_columns_string:
+            columns.append(querying.get_column(self.alchemist.metadata, string))
+
+        return columns
+
+    def draw_display(self, data, header):
+        self.clear_display()
+
+        row = []
+        for x in range(len(header)):
+            field = self.create_field(x, 0, header[x]) 
+            row.append(field)
+        self.entries.append(row)
+
+        for y in range(1, len(data)+1):
             row = []
-            for y in range(4):
-                label = tkinter.Entry(self.display_frame, width=13,
-                                        bg="white", bd=1, relief=tkinter.SOLID)
-                label.grid(row=x, column=y)
-                label.insert(tkinter.END, "TEST")
-                row.append(label)
+            for x in range(len(header)):
+                entry = data[y-1][header[x]]
+                if entry is None:
+                    entry = "NULL"
+                field = self.create_field(x, y, entry)
+                row.append(field)
 
             self.entries.append(row)
+
+    def create_field(self, column, row, text):
+        label = tkinter.Entry(self.display_frame, width=13,
+                                       bg="white", bd=1, relief=tkinter.SOLID)
+        label.grid(row=row, column=column)
+        label.insert(tkinter.END, text)
+        label.config(state="disabled", disabledbackground="white",
+                                       disabledforeground="black") 
+
+    def raise_column_error(self):
+        print("COLUMN ERROR")
+
+    def raise_filter_error(self):
+        print("FILTER ERROR")
 
     def validate_table_bind(self, var, index, mode):
         self.validate_table(var)
