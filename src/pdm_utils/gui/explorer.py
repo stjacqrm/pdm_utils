@@ -8,6 +8,7 @@ from tkinter import OptionMenu
 from tkinter import StringVar
 from tkinter import Menubutton
 from tkinter.ttk import Combobox
+from tkinter.ttk import Treeview
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
@@ -178,9 +179,8 @@ class Explorer(tkinter.Frame):
                                                 anchor=tkinter.CENTER)
 
     def create_display(self):
-        self.display_frame = Frame(self.master)
-        self.display_frame.pack(fill=tkinter.BOTH, expand=1)
-        self.display_frame.config(bg=gui_basic.BG1)
+        self.display = Treeview(self.master)
+        self.display.pack(fill=tkinter.BOTH, expand=1)
 
         self.entries = []
 
@@ -272,6 +272,7 @@ class Explorer(tkinter.Frame):
     def clear(self):
         self.clear_widgets()
         self.clear_display()
+
     def clear_widgets(self):
         self.column_t_entry.delete(0, tkinter.END) 
         self.columns_entry.delete(0, tkinter.END)
@@ -280,10 +281,6 @@ class Explorer(tkinter.Frame):
         self.where_entry.delete(0, tkinter.END)
 
     def clear_display(self):
-        for row in self.entries:
-            for label in row:
-                label.destroy()
-
         self.entries = []
 
     def add_column(self):
@@ -365,8 +362,8 @@ class Explorer(tkinter.Frame):
         decode_results(data, columns)
         
         header = []
-        if data:
-            header = list(data[0].keys())
+        for column in columns:
+            header.append(str(column))
 
         self.draw_display(data, header)
 
@@ -382,32 +379,25 @@ class Explorer(tkinter.Frame):
         return columns
 
     def draw_display(self, data, header):
-        self.clear_display()
+        self.draw_display_headers(header)
+        self.draw_display_data(data)
+        self.update()
 
-        row = []
-        for x in range(len(header)):
-            field = self.create_field(x, 0, header[x]) 
-            row.append(field)
-        self.entries.append(row)
+    def draw_display_headers(self, header):
+        self.display["columns"] = tuple(range(len(header)))
 
-        for y in range(1, len(data)+1):
-            row = []
-            for x in range(len(header)):
-                entry = data[y-1][header[x]]
-                if entry is None:
-                    entry = "NULL"
-                field = self.create_field(x, y, entry)
-                row.append(field)
+        for column_index in range(len(header)):
+            self.display.column(column_index, width=130, minwidth=130)
+            self.display.heading(column_index, text=header[column_index], 
+                                                anchor=tkinter.W)
 
-            self.entries.append(row)
+        self.display["displaycolumns"] = tuple(range(len(header)))
 
-    def create_field(self, column, row, text):
-        label = tkinter.Entry(self.display_frame, width=13,
-                                       bg="white", bd=1, relief=tkinter.SOLID)
-        label.grid(row=row, column=column)
-        label.insert(tkinter.END, text)
-        label.config(state="disabled", disabledbackground="white",
-                                       disabledforeground="black") 
+    def draw_display_data(self, data):
+        for entry_index in range(len(data)):
+            entry = tuple(data[entry_index].values())
+            self.display.insert("", entry_index+1, "", 
+                                text=entry[0], values=entry[1:])
 
     def raise_column_error(self):
         print("COLUMN ERROR")
