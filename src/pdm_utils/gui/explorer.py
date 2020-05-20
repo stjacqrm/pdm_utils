@@ -9,6 +9,7 @@ from tkinter import StringVar
 from tkinter import Menubutton
 from tkinter.ttk import Combobox
 from tkinter.ttk import Treeview
+from tkinter.ttk import Scrollbar
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
@@ -37,13 +38,16 @@ class Explorer(tkinter.Frame):
         self.login()
         if self.alchemist is None:
             self.quit()
-             
-        self.create_widgets()
+
+        self.create_widgets() 
+        self.display = None
 
     def create_widgets(self):
         self.create_menu()
         self.create_selector()
-        self.create_display() 
+
+        self.display_frame = Frame(self.master)
+        self.display_frame.pack(fill=tkinter.BOTH, expand=1)
 
     def create_menu(self):        
         self.menu = Menu(self) 
@@ -178,12 +182,6 @@ class Explorer(tkinter.Frame):
         self.add_filter_button.place(in_=self.filter_o_entry, x=75, rely=0.49,
                                                 anchor=tkinter.CENTER)
 
-    def create_display(self):
-        self.display = Treeview(self.master)
-        self.display.pack(fill=tkinter.BOTH, expand=1)
-
-        self.entries = []
-
     def login(self):
         logger_window = logger.create_window(tkinter.Toplevel()) 
 
@@ -271,7 +269,7 @@ class Explorer(tkinter.Frame):
 
     def clear(self):
         self.clear_widgets()
-        self.clear_display()
+        #self.clear_display()
 
     def clear_widgets(self):
         self.column_t_entry.delete(0, tkinter.END) 
@@ -280,8 +278,9 @@ class Explorer(tkinter.Frame):
         self.filter_t_entry.delete(0, tkinter.END)
         self.where_entry.delete(0, tkinter.END)
 
+
     def clear_display(self):
-        self.entries = []
+        pass
 
     def add_column(self):
         table = self.column_t_entry.get()
@@ -365,7 +364,7 @@ class Explorer(tkinter.Frame):
         for column in columns:
             header.append(str(column))
 
-        self.draw_display(data, header)
+        self.create_display(data, header)
 
     def process_columns(self):
         columns_string = self.columns_entry.get()
@@ -378,25 +377,46 @@ class Explorer(tkinter.Frame):
 
         return columns
 
-    def draw_display(self, data, header):
-        self.draw_display_headers(header)
-        self.draw_display_data(data)
-        self.update()
+    def create_display(self, data, header):
+        if not self.display is None:
+            self.display.destroy()
+        
+        self.display = Treeview(self.display_frame)
 
-    def draw_display_headers(self, header):
-        self.display["columns"] = tuple(range(len(header)))
+        self.create_display_frame()
+        self.create_display_headers(header)
+        self.create_display_data(data)
 
-        for column_index in range(len(header)):
-            self.display.column(column_index, width=130, minwidth=130)
-            self.display.heading(column_index, text=header[column_index], 
-                                                anchor=tkinter.W)
+    def create_display_frame(self):
+        yscrollbar = Scrollbar(self.display_frame, orient="vertical",
+                                                   command=self.display.yview)
+        yscrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
-        self.display["displaycolumns"] = tuple(range(len(header)))
+        xscrollbar = Scrollbar(self.display_frame, orient="horizontal",
+                                                   command=self.display.xview)
+        xscrollbar.pack(side=tkinter.TOP, fill=tkinter.X)
 
-    def draw_display_data(self, data):
+        self.display.configure(yscrollcommand=yscrollbar.set,
+                               xscrollcommand=xscrollbar.set)
+
+    def create_display_headers(self, header): 
+        self.display.column("#0", width=100, minwidth=100)
+        self.display.heading("#0", text=header[0], anchor=tkinter.W)
+
+        if len(header) > 1: 
+            self.display["columns"] = tuple(range(1, len(header)))
+
+            for index in range(1, len(header)):
+                self.display.column(index, width=100, minwidth=100)
+                self.display.heading(index, text=header[index], 
+                                                    anchor=tkinter.W)
+
+        self.display.pack(fill=tkinter.BOTH, expand=1)
+
+    def create_display_data(self, data):
         for entry_index in range(len(data)):
             entry = tuple(data[entry_index].values())
-            self.display.insert("", entry_index+1, "", 
+            self.display.insert("", "end",
                                 text=entry[0], values=entry[1:])
 
     def raise_column_error(self):
